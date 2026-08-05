@@ -1,4 +1,4 @@
-# Vape Store Retail - POS & Inventory System
+# POS & Inventory System
 
 Sistem Point of Sale (POS) dan Manajemen Inventaris Retail komprehensif yang dirancang khusus untuk toko retail. Dibangun dengan menggunakan arsitektur modern (React, Vite, Node.js, Express, dan MongoDB).
 
