@@ -1,0 +1,6 @@
+{
+  "name": "POS & Inventory Retail",
+  "description": "Aplikasi POS, Manajemen Stok & Inventory Ledger, dan Dashboard Owner Retail.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
