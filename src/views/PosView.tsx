@@ -54,7 +54,7 @@ export const PosView: React.FC<PosViewProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { sales, setReceiptSale, loadAppData } = useAppData();
-  const { lockScreen } = useAuth();
+  const { handleLogout } = useAuth();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -300,7 +300,6 @@ export const PosView: React.FC<PosViewProps> = ({
       <POSHeader 
         user={user} 
         onLogout={onLogout} 
-        onLockScreen={lockScreen}
         onShowQR={() => setIsQRModalOpen(true)}
         onShowHistory={() => setIsHistoryModalOpen(true)}
         onShowPendingOrders={() => setIsPendingOrdersOpen(true)}

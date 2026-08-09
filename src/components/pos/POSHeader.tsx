@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Bell, ChevronRight, LogOut, Lock, Store, ReceiptText } from 'lucide-react';
 import { Bell, ChevronRight, LogOut, Store, ReceiptText } from 'lucide-react';
 import { User } from '../../types';
 

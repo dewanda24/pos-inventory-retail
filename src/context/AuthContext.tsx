@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { api, getStoredUser, setAuthSession } from '../lib/api';
+import { api, getStoredUser, setAuthSession, getStoredToken, clearAuthSession } from '../lib/api';
 
 export interface AuthContextType {
   currentUser: User | null;
