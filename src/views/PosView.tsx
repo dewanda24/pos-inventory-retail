@@ -315,7 +315,7 @@ export const PosView: React.FC<PosViewProps> = ({
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-6">
             {filteredProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 py-12">
                 <ShoppingBag className="w-16 h-16 mb-4 opacity-20" />

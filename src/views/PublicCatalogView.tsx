@@ -68,7 +68,7 @@ export const PublicCatalogView: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6">
         <CustomerCatalogView
           products={data.products}
           categories={data.categories}
