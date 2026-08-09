@@ -471,11 +471,10 @@ export const PosView: React.FC<PosViewProps> = ({
 
       {/* POS Mobile Action Bar */}
       <PosMobileActionBar
-        onShowPendingOrders={() => setIsPendingOrdersOpen(true)}
+        onOpenPendingOrders={() => setIsPendingOrdersOpen(true)}
         pendingOrdersCount={pendingOrdersCount}
         onShowHistory={() => setIsHistoryModalOpen(true)}
         onShowQR={() => setIsQRModalOpen(true)}
-        onLockScreen={lockScreen}
       />
     </div>
   );
