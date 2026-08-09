@@ -1,13 +1,11 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
-import dns from 'dns';
 import tls from 'tls';
 
-// Fix Node.js 24 + MongoDB Atlas compatibility issues (DNS querySrv ECONNREFUSED and TLS Alert 80)
+// Fix Node.js 24 + MongoDB Atlas TLS compatibility
 try {
   tls.DEFAULT_MAX_VERSION = 'TLSv1.2';
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
 } catch (e) {
-  console.warn('Failed to apply network workarounds:', e);
+  console.warn('Failed to apply TLS workaround:', e);
 }
 import bcrypt from 'bcryptjs';
 import {
@@ -15,7 +13,6 @@ import {
   Sale, StockOpname, Expense, ExpenseCategory, AuditLog, StoreSettings,
   AppNotification, DashboardSummary
 } from '../types';
-import { createSeedData } from './seeds';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME = 'vape_retail_db';
