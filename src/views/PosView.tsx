@@ -13,6 +13,7 @@ import { CloseShiftModal } from '../components/pos/CloseShiftModal';
 import { PendingOrdersModal } from '../components/pos/PendingOrdersModal';
 import { QRCodeModal } from '../components/pos/QRCodeModal';
 import { TransactionHistoryModal } from '../components/pos/TransactionHistoryModal';
+import { PosMobileActionBar } from '../components/pos/PosMobileActionBar';
 import { useAppData } from '../context/AppDataContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -425,7 +426,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
       {/* Mobile Bottom Cart Bar */}
       {!isCatalogMode && cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-[60px] md:bottom-0 inset-x-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30">
+        <div className="lg:hidden fixed bottom-[60px] inset-x-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="flex flex-col">
               <span className="text-xs text-slate-500 font-bold flex items-center gap-1"><ShoppingBag className="w-3.5 h-3.5"/> {cart.reduce((a,c)=>a+c.qty, 0)} item</span>
@@ -489,6 +490,15 @@ export const PosView: React.FC<PosViewProps> = ({
         userId={user.id}
         onViewReceipt={(sale) => setReceiptSale(sale)}
         onRefresh={loadAppData}
+      />
+
+      {/* POS Mobile Action Bar */}
+      <PosMobileActionBar
+        onShowPendingOrders={() => setIsPendingOrdersOpen(true)}
+        pendingOrdersCount={pendingOrdersCount}
+        onShowHistory={() => setIsHistoryModalOpen(true)}
+        onShowQR={() => setIsQRModalOpen(true)}
+        onLockScreen={lockScreen}
       />
     </div>
   );
