@@ -13,6 +13,7 @@ import {
   Sale, StockOpname, Expense, ExpenseCategory, AuditLog, StoreSettings,
   AppNotification, DashboardSummary
 } from '../types';
+import { createSeedData } from './seeds';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME = 'vape_retail_db';
