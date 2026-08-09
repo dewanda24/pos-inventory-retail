@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Scan, Maximize2, Minimize2, ShoppingBag } from 'lucide-react';
+import { toast } from 'sonner';
 import { Product, Category, SaleItem, PaymentMethod, Sale, StoreSettings, User } from '../types';
 import { api } from '../lib/api';
 
@@ -78,6 +79,7 @@ export const PosView: React.FC<PosViewProps> = ({
           setCart([]);
           setDiscountAmount(0);
           setErrorMsg(null);
+          toast.info('Keranjang dikosongkan');
         }
       }
     };
@@ -103,6 +105,7 @@ export const PosView: React.FC<PosViewProps> = ({
     setErrorMsg(null);
     if (product.stock <= 0) {
       setErrorMsg(`Stok "${product.name}" telah habis!`);
+      toast.error(`Stok "${product.name}" telah habis!`);
       return;
     }
 
@@ -112,6 +115,7 @@ export const PosView: React.FC<PosViewProps> = ({
         const currentQty = prev[existingIdx].qty;
         if (currentQty + 1 > product.stock) {
           setErrorMsg(`Stok "${product.name}" terbatas (${product.stock} pcs)!`);
+          toast.error(`Stok "${product.name}" terbatas (${product.stock} pcs)!`);
           return prev;
         }
         const updated = [...prev];
@@ -121,8 +125,10 @@ export const PosView: React.FC<PosViewProps> = ({
           qty: newQty,
           subtotal: newQty * product.sellPrice
         };
+        toast.success(`Jumlah ${product.name} diperbarui`);
         return updated;
       } else {
+        toast.success(`${product.name} ditambahkan ke keranjang`);
         return [
           ...prev,
           {
@@ -223,8 +229,11 @@ export const PosView: React.FC<PosViewProps> = ({
       setCart([]);
       setDiscountAmount(0);
       setIsPaymentModalOpen(false);
+      
+      toast.success('Transaksi Berhasil diproses!');
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal memproses transaksi.');
+      toast.error(err.message || 'Gagal memproses transaksi.');
     } finally {
       setIsSubmitting(false);
     }

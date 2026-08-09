@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Toaster, toast } from 'sonner';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -244,6 +245,9 @@ function AppContent() {
         onNavigateTab={handleNavigateTab}
         userRole={currentUser?.role || 'KASIR'}
       />
+
+      {/* Global Toast Notifications */}
+      <Toaster position="top-center" richColors />
     </div>
   );
 }

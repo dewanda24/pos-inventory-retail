@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { LogIn, DollarSign, Loader2 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAppData } from '../../context/AppDataContext';
@@ -26,9 +28,11 @@ export const StartShiftModal: React.FC<StartShiftModalProps> = ({ onSuccess }) =
     try {
       const shift = await api.startShift(amount);
       setCurrentShift(shift);
+      toast.success('Shift kasir berhasil dibuka');
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Gagal membuka kasir');
+      toast.error(err.message || 'Gagal membuka kasir');
     } finally {
       setIsSubmitting(false);
     }
@@ -40,8 +44,19 @@ export const StartShiftModal: React.FC<StartShiftModalProps> = ({ onSuccess }) =
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl"
+        >
         <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800">
           <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <LogIn className="w-8 h-8" />
@@ -83,7 +98,8 @@ export const StartShiftModal: React.FC<StartShiftModalProps> = ({ onSuccess }) =
             {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Buka Kasir Sekarang'}
           </button>
         </form>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };

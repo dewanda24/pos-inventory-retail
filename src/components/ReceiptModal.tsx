@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Printer, CheckCircle2, X, Download, Bluetooth, Usb, Loader2, AlertCircle } from 'lucide-react';
 import { Sale, StoreSettings } from '../types';
 import { useThermalPrinter } from '../hooks/useThermalPrinter';
@@ -29,9 +30,21 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, settings, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
-      <div className="w-full max-w-sm bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Modal Header */}
+    <>
+      <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs"
+      >
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0, y: 30 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 30 }}
+          className="w-full max-w-sm bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+        >
+          {/* Modal Header */}
         <div className="px-4 py-3 bg-emerald-600 text-white flex items-center justify-between no-print">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-200" />
@@ -195,7 +208,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, settings, onCl
             </button>
           )}
         </div>
-      </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
 
       {/* Print Specific CSS */}
       <style>{`
@@ -218,6 +233,6 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, settings, onCl
           }
         }
       `}</style>
-    </div>
+    </>
   );
 };

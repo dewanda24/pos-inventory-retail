@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { Store, Lock, User as UserIcon, ArrowRight, ShieldCheck, Key, AlertCircle } from 'lucide-react';
 import { api, setAuthSession } from '../lib/api';
 import { User } from '../types';
@@ -15,7 +17,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen = true, onClose, 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  // if (!isOpen) return null; // Removed for AnimatePresence to work properly
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +27,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen = true, onClose, 
     try {
       const res = await api.login(username, password);
       setAuthSession(res.token, res.user);
+      toast.success(`Berhasil masuk sebagai ${res.user.name}`);
       onLoginSuccess(res.user, res.token);
     } catch (err: any) {
       setError(err.message || 'Gagal masuk. Periksa username dan password.');
+      toast.error('Gagal masuk. Periksa kembali kredensial Anda.');
     } finally {
       setLoading(false);
     }
@@ -35,9 +39,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen = true, onClose, 
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        {/* Header */}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+        >
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+          >
+            {/* Header */}
         <div className="p-6 bg-gradient-to-br from-emerald-600 via-emerald-700 to-slate-900 text-white text-center relative">
           <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/20 shadow-inner">
             <Store className="w-8 h-8 text-white" />
@@ -106,8 +122,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen = true, onClose, 
             )}
           </button>
 
-        </form>
-      </div>
-    </div>
+          </form>
+        </motion.div>
+      </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { LogOut, DollarSign, Loader2, Calculator } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAppData } from '../../context/AppDataContext';
@@ -35,9 +37,11 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({ onClose, onSuc
     setError('');
     try {
       await api.closeShift(shift.id, actualCashNum, notes);
+      toast.success('Kasir berhasil ditutup dan laporan tersimpan');
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Gagal menutup kasir');
+      toast.error(err.message || 'Gagal menutup kasir');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,8 +53,19 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({ onClose, onSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
+        >
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-rose-50 dark:bg-rose-900/10">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center">
@@ -149,7 +164,8 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({ onClose, onSuc
             </button>
           </div>
         </form>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
