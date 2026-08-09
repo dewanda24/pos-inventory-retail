@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { Bell, ChevronRight, LogOut, Lock, Store, ReceiptText } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Store, ReceiptText } from 'lucide-react';
 import { User } from '../../types';
 
 interface POSHeaderProps {
   user: User;
   onLogout?: () => void;
-  onCloseShift?: () => void;
-  onLockScreen?: () => void;
   onShowQR?: () => void;
   onShowHistory?: () => void;
   onShowPendingOrders?: () => void;
   pendingOrdersCount?: number;
 }
 
-export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShift, onLockScreen, onShowQR, onShowHistory, onShowPendingOrders, pendingOrdersCount = 0 }) => {
+export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onShowQR, onShowHistory, onShowPendingOrders, pendingOrdersCount = 0 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between shadow-xs">
@@ -71,25 +70,6 @@ export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShi
             >
               <Store className="w-4 h-4" />
               <span>QR Katalog</span>
-            </button>
-          )}
-          {onCloseShift && (
-            <button 
-              onClick={onCloseShift}
-              className="flex items-center gap-2 px-4 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 rounded-lg text-sm font-bold border border-rose-200 dark:border-rose-800 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Tutup Kasir
-            </button>
-          )}
-          {onLockScreen && (
-            <button 
-              onClick={onLockScreen}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 transition-colors"
-              title="Kunci Layar (PIN)"
-            >
-              <Lock className="w-4 h-4" />
-              <span>Kunci</span>
             </button>
           )}
         </div>

@@ -239,7 +239,15 @@ export class DBStore {
       await this.recordStockLedgerEntry(item.productId, 'PENJUALAN', -item.qty, invoiceNo, `Transaksi Kasir #${invoiceNo}`, userId, userName);
     }
 
-    const newSale: Sale = { ...saleData, id: `sale-${Date.now()}`, invoiceNo, status: 'COMPLETED', createdAt: now.toISOString() };
+    const newSale: Sale = { 
+      ...saleData, 
+      id: `sale-${Date.now()}`, 
+      invoiceNo, 
+      status: 'COMPLETED', 
+      createdAt: now.toISOString(),
+      userId,
+      userName
+    };
     await this.db.collection('sales').insertOne(newSale);
     await this.addAuditLog(userId, userName, 'KASIR', 'CREATE_SALE', 'POS', `Penjualan ${invoiceNo} senilai Rp ${saleData.finalAmount.toLocaleString('id-ID')} berhasil`);
     return newSale;

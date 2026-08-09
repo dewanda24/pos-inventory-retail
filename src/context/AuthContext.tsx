@@ -14,44 +14,33 @@ export interface AuthContextType {
   setShowLoginModal: (show: boolean) => void;
   handleLoginSuccess: (user: User, token?: string) => void;
   handleLogout: () => void;
-  isLocked: boolean;
-  lockScreen: () => void;
-  unlockScreen: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getStoredUser());
+  const [activeTab, setActiveTab] = useState<string>('pos');
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('pos_retail_theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  const [showLoginModal, setShowLoginModal] = useState(!getStoredToken());
 
-  // Initialize Auth
   useEffect(() => {
-    // Load currentUser from token
-    const token = api.getToken();
-    const storedUser = getStoredUser();
-    if (token && storedUser) {
-      setCurrentUser(storedUser);
-      if (storedUser.role === 'KASIR') {
+    if (currentUser) {
+      if (currentUser.role === 'KASIR') {
         setActiveTab('pos');
       } else {
         setActiveTab('dashboard');
       }
-      
-      const lockedState = localStorage.getItem('pos_retail_locked');
-      if (lockedState === 'true') {
-        setIsLocked(true);
-      }
-    } else {
-      setShowLoginModal(true);
     }
-  }, []);
+  }, [currentUser]);
 
   const toggleDarkMode = () => {
-    // Disabled for Light Vape Store Theme
+    setDarkMode(!darkMode);
+    localStorage.setItem('pos_retail_theme', !darkMode ? 'dark' : 'light');
   };
 
   const handleLoginSuccess = (user: User, token?: string) => {
@@ -60,29 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setCurrentUser(user);
     setShowLoginModal(false);
-    if (user.role === 'KASIR') {
-      setActiveTab('pos');
-    } else {
-      setActiveTab('dashboard');
-    }
   };
 
   const handleLogout = () => {
-    api.logout();
+    clearAuthSession();
     setCurrentUser(null);
-    setIsLocked(false);
-    localStorage.removeItem('pos_retail_locked');
     setShowLoginModal(true);
-  };
-
-  const lockScreen = () => {
-    setIsLocked(true);
-    localStorage.setItem('pos_retail_locked', 'true');
-  };
-
-  const unlockScreen = () => {
-    setIsLocked(false);
-    localStorage.removeItem('pos_retail_locked');
+    setActiveTab('pos');
   };
 
   const handleNavigateTab = (tab: string) => {
@@ -110,10 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showLoginModal,
         setShowLoginModal,
         handleLoginSuccess,
-        handleLogout,
-        isLocked,
-        lockScreen,
-        unlockScreen
+        handleLogout
       }}
     >
       {children}

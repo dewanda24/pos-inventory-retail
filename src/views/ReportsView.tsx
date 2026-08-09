@@ -107,7 +107,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sales, products, users
   const handleExportCSV = () => {
     let csvContent = 'data:text/csv;charset=utf-8,No. Nota,Tanggal,Kasir,Pelanggan,Metode,Total Tagihan\n';
     filteredSales.forEach((s) => {
-      csvContent += `${s.invoiceNo},${s.date},${s.userName},${s.customerName || 'Umum'},${s.paymentMethod},${s.finalAmount}\n`;
+      csvContent += `${s.invoiceNo},${new Date(s.createdAt).toLocaleString('id-ID')},${s.userName},${s.customerName || 'Umum'},${s.paymentMethod},${s.finalAmount}\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');

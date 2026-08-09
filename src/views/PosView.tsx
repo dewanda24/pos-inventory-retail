@@ -8,8 +8,6 @@ import { POSHeader } from '../components/pos/POSHeader';
 import { ProductCard } from '../components/pos/ProductCard';
 import { CartPanel } from '../components/pos/CartPanel';
 import { PaymentModal } from '../components/pos/PaymentModal';
-import { StartShiftModal } from '../components/pos/StartShiftModal';
-import { CloseShiftModal } from '../components/pos/CloseShiftModal';
 import { PendingOrdersModal } from '../components/pos/PendingOrdersModal';
 import { QRCodeModal } from '../components/pos/QRCodeModal';
 import { TransactionHistoryModal } from '../components/pos/TransactionHistoryModal';
@@ -49,14 +47,13 @@ export const PosView: React.FC<PosViewProps> = ({
   const [isCatalogMode, setIsCatalogMode] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
   const [isPendingOrdersOpen, setIsPendingOrdersOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { currentShift, sales, setReceiptSale, loadAppData } = useAppData();
+  const { sales, setReceiptSale, loadAppData } = useAppData();
   const { lockScreen } = useAuth();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -268,7 +265,6 @@ export const PosView: React.FC<PosViewProps> = ({
 
     try {
       const saleData = {
-        shiftId: currentShift?.id,
         items: cart,
         customerName: 'Pelanggan Umum', // Simplified for this layout update
         subtotal,
@@ -304,7 +300,6 @@ export const PosView: React.FC<PosViewProps> = ({
       <POSHeader 
         user={user} 
         onLogout={onLogout} 
-        onCloseShift={() => setIsCloseShiftModalOpen(true)} 
         onLockScreen={lockScreen}
         onShowQR={() => setIsQRModalOpen(true)}
         onShowHistory={() => setIsHistoryModalOpen(true)}
@@ -450,23 +445,6 @@ export const PosView: React.FC<PosViewProps> = ({
         onProcessPayment={handleCheckoutProcess}
         isSubmitting={isSubmitting}
       />
-
-      {/* Shift Management Modals */}
-      {!currentShift && (
-        <StartShiftModal onSuccess={() => {}} />
-      )}
-      
-      {currentShift && isCloseShiftModalOpen && (
-        <CloseShiftModal 
-          shift={currentShift} 
-          sales={sales}
-          onClose={() => setIsCloseShiftModalOpen(false)}
-          onSuccess={() => {
-            setIsCloseShiftModalOpen(false);
-            window.location.reload(); // Quick way to reset state and show StartShiftModal again
-          }} 
-        />
-      )}
 
       {/* Pending Orders Modal */}
       <PendingOrdersModal

@@ -7,7 +7,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { LoginModal } from './components/LoginModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { NotificationDrawer } from './components/NotificationDrawer';
-import { LockScreen } from './components/LockScreen';
+import { NotificationDrawer } from './components/NotificationDrawer';
 
 const AccessDenied = () => (
   <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20">
@@ -45,8 +45,7 @@ function AppContent() {
     showLoginModal,
     setShowLoginModal,
     handleLoginSuccess,
-    handleLogout,
-    isLocked
+    handleLogout
   } = useAuth();
 
   const {
@@ -253,9 +252,6 @@ function AppContent() {
         onClose={() => setShowLoginModal(false)}
         onLoginSuccess={handleLoginSuccess}
       />
-
-      {/* Lock Screen */}
-      {isLocked && <LockScreen />}
 
       {/* Thermal Receipt Modal */}
       {receiptSale && (
