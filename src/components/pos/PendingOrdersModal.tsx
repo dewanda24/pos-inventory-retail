@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Clock, ShoppingCart, User, CheckCircle2, XCircle } from 'lucide-react';
-import { PendingOrder } from '../types';
-import { api } from '../lib/api';
+import { PendingOrder } from '../../types';
+import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
 interface PendingOrdersModalProps {
