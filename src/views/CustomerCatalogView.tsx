@@ -13,7 +13,8 @@ import {
   QrCode,
   Sparkles,
   ArrowRight,
-  Info
+  Info,
+  Tag
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Product, Category } from '../types';

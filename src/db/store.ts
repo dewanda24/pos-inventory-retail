@@ -39,6 +39,7 @@ export class DBStore {
       await this.initializeSeedsIfNeeded();
     } catch (err) {
       console.error('Failed to connect to MongoDB', err);
+      throw err;
     }
   }
 
@@ -80,15 +81,6 @@ export class DBStore {
   }
 
   // --- Auth Methods ---
-  public async findUserByUsername(username: string) {
-    return this.db.collection<User>('users').findOne({ username });
-  }
-
-  public async verifyPassword(userId: string, passwordPlain: string) {
-    const record = await this.db.collection('userPasswords').findOne({ userId });
-    if (!record) return false;
-    return bcrypt.compare(passwordPlain, record.hash);
-  }
 
   public async recordStockLedgerEntry(productId: string, type: StockLedgerEntry['type'], qtyChange: number, referenceNo: string, notes: string, userId: string, userName: string) {
     const product = await this.db.collection('products').findOne({ id: productId });
