@@ -1,12 +1,6 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
 import tls from 'tls';
-
-// Fix Node.js 24 + MongoDB Atlas TLS compatibility
-try {
-  tls.DEFAULT_MAX_VERSION = 'TLSv1.2';
-} catch (e) {
-  console.warn('Failed to apply TLS workaround:', e);
-}
+import dns from 'dns';
 import bcrypt from 'bcryptjs';
 import {
   User, Category, Supplier, Product, StockLedgerEntry, GoodsInDocument,
@@ -14,6 +8,16 @@ import {
   AppNotification, DashboardSummary
 } from '../types';
 import { createSeedData } from './seeds';
+
+// Fix Node.js 24 + MongoDB Atlas TLS/DNS compatibility (local only)
+try {
+  tls.DEFAULT_MAX_VERSION = 'TLSv1.2';
+  if (!process.env.VERCEL) {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+  }
+} catch (e) {
+  console.warn('Failed to apply TLS/DNS workaround:', e);
+}
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME = 'vape_retail_db';
