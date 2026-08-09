@@ -40,6 +40,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
     );
   }
 
+  // Calculate dynamic omzet percentage
+  const yesterday = summary.yesterdayOmzet || 0;
+  const today = summary.todayOmzet || 0;
+  let omzetPercent = 0;
+  if (yesterday > 0) {
+    omzetPercent = ((today - yesterday) / yesterday) * 100;
+  } else if (today > 0) {
+    omzetPercent = 100;
+  }
+  const isPositive = omzetPercent >= 0;
+  const percentStr = `${isPositive ? '+' : ''}${omzetPercent.toFixed(1)}%`;
+
   return (
     <div className="space-y-5">
       {/* Top Banner - High Density Header Bar */}
@@ -92,7 +104,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
             </div>
           </div>
           <div className="mt-3 text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">+12%</span> vs hari lalu • Realtime
+            <span className={`${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} font-bold`}>
+              {percentStr}
+            </span> vs hari lalu • Realtime
           </div>
         </div>
 

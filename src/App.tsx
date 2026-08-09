@@ -112,13 +112,15 @@ function AppContent() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <Sidebar
-          user={currentUser}
-          activeTab={activeTab}
-          onSelectTab={handleNavigateTab}
-          role={currentUser?.role || 'KASIR'}
-          lowStockCount={summary?.lowStockCount || 0}
-        />
+        {currentUser?.role !== 'KASIR' && (
+          <Sidebar
+            user={currentUser}
+            activeTab={activeTab}
+            onSelectTab={handleNavigateTab}
+            role={currentUser?.role || 'KASIR'}
+            lowStockCount={summary?.lowStockCount || 0}
+          />
+        )}
 
         {/* Main Content View Container */}
         <main className={`flex-1 overflow-y-auto ${activeTab === 'pos' ? 'bg-slate-100 dark:bg-slate-950' : 'p-4 md:p-6 pb-24 md:pb-8'}`}>
@@ -237,11 +239,13 @@ function AppContent() {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        onSelectTab={handleNavigateTab}
-        role={currentUser?.role || 'KASIR'}
-      />
+      {currentUser?.role !== 'KASIR' && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          onSelectTab={handleNavigateTab}
+          role={currentUser?.role || 'KASIR'}
+        />
+      )}
 
       {/* Login Modal */}
       <LoginModal

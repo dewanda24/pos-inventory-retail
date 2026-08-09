@@ -171,6 +171,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(saleData)
     }),
+  voidSale: (id: string, pin: string) =>
+    request<{ success: boolean }>(`/api/sales/${id}/void`, {
+      method: 'POST',
+      body: JSON.stringify({ pin })
+    }),
 
   // Shifts
   getShifts: () => request<CashierShift[]>('/api/shifts'),

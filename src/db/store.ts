@@ -239,10 +239,61 @@ export class DBStore {
       await this.recordStockLedgerEntry(item.productId, 'PENJUALAN', -item.qty, invoiceNo, `Transaksi Kasir #${invoiceNo}`, userId, userName);
     }
 
-    const newSale: Sale = { ...saleData, id: `sale-${Date.now()}`, invoiceNo, createdAt: now.toISOString() };
+    const newSale: Sale = { ...saleData, id: `sale-${Date.now()}`, invoiceNo, status: 'COMPLETED', createdAt: now.toISOString() };
     await this.db.collection('sales').insertOne(newSale);
     await this.addAuditLog(userId, userName, 'KASIR', 'CREATE_SALE', 'POS', `Penjualan ${invoiceNo} senilai Rp ${saleData.finalAmount.toLocaleString('id-ID')} berhasil`);
     return newSale;
+  }
+  
+  public async voidSale(saleId: string, userId: string, userName: string, ownerPin: string) {
+    // 1. Verify PIN
+    const owners = await this.db.collection<User>('users').find({ role: 'OWNER' }).toArray();
+    let isPinValid = false;
+    for (const owner of owners) {
+      if (await this.verifyPin(owner.id, ownerPin)) {
+        isPinValid = true;
+        break;
+      }
+    }
+    if (!isPinValid) {
+      throw new Error('PIN Owner tidak valid atau Anda bukan Owner.');
+    }
+
+    // 2. Find Sale
+    const sale = await this.db.collection<Sale>('sales').findOne({ id: saleId });
+    if (!sale) throw new Error('Transaksi tidak ditemukan.');
+    if (sale.status === 'CANCELLED') throw new Error('Transaksi sudah dibatalkan sebelumnya.');
+
+    // 3. Return Stock
+    for (const item of sale.items) {
+      await this.recordStockLedgerEntry(
+        item.productId, 
+        'RETURN', 
+        item.qty, 
+        sale.invoiceNo, 
+        `Pembatalan Transaksi (Void) oleh Owner`, 
+        userId, 
+        userName
+      );
+    }
+
+    // 4. Update Sale Status
+    await this.db.collection('sales').updateOne(
+      { id: saleId }, 
+      { $set: { status: 'CANCELLED', voidedAt: new Date().toISOString(), voidedBy: userId } }
+    );
+
+    // 5. Audit Log
+    await this.addAuditLog(
+      userId, 
+      userName, 
+      'KASIR', 
+      'VOID_SALE', 
+      'POS', 
+      `Membatalkan penjualan ${sale.invoiceNo} senilai Rp ${sale.finalAmount.toLocaleString('id-ID')}`
+    );
+
+    return true;
   }
   // --- Pending Orders ---
   public async createPendingOrder(orderData: Omit<PendingOrder, 'id' | 'status' | 'createdAt'>): Promise<PendingOrder> {
@@ -371,10 +422,15 @@ export class DBStore {
 
   public async getDashboardSummary(): Promise<DashboardSummary> {
     const todayStr = new Date().toISOString().slice(0, 10);
+    const yesterdayDate = new Date(Date.now() - 86400000);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+    
     const sales = await this.db.collection<Sale>('sales').find({ status: 'COMPLETED' }).toArray();
     const todaySales = sales.filter((s) => s.createdAt.startsWith(todayStr));
+    const yesterdaySales = sales.filter((s) => s.createdAt.startsWith(yesterdayStr));
 
     const todayOmzet = todaySales.reduce((acc, s) => acc + s.finalAmount, 0);
+    const yesterdayOmzet = yesterdaySales.reduce((acc, s) => acc + s.finalAmount, 0);
     const todayTransactionsCount = todaySales.length;
     const todayItemsSold = todaySales.reduce((acc, s) => acc + s.items.reduce((itemAcc, item) => itemAcc + item.qty, 0), 0);
     
@@ -428,7 +484,7 @@ export class DBStore {
     const topSellingProducts = Object.values(prodMap).sort((a, b) => b.qtySold - a.qtySold).slice(0, 5);
     
     return {
-      todayOmzet, todayGrossProfit, todayNetProfit, todayExpenses, todayTransactionsCount, todayItemsSold, lowStockCount, totalProductsCount, totalStockValue, salesChartData, topSellingProducts,
+      todayOmzet, yesterdayOmzet, todayGrossProfit, todayNetProfit, todayExpenses, todayTransactionsCount, todayItemsSold, lowStockCount, totalProductsCount, totalStockValue, salesChartData, topSellingProducts,
       recentGoodsIn: await this.db.collection('goodsInDocs').find().sort({ createdAt: -1 }).limit(5).toArray() as any,
       recentLogs: await this.db.collection('auditLogs').find().sort({ timestamp: -1 }).limit(8).toArray() as any,
       notifications: await this.db.collection('notifications').find().sort({ createdAt: -1 }).toArray() as any

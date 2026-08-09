@@ -31,17 +31,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ role, activeTa
           </button>
         )}
 
-        <button
-          onClick={() => handleSelect('catalog')}
-          className={`flex flex-col items-center justify-center w-14 h-full text-[10px] font-medium transition-colors ${
-            activeTab === 'catalog'
-              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-          }`}
-        >
-          <Store className="w-5 h-5 mb-0.5" />
-          <span>Katalog</span>
-        </button>
+        {role === 'KASIR' && (
+          <button
+            onClick={() => handleSelect('catalog')}
+            className={`flex flex-col items-center justify-center w-14 h-full text-[10px] font-medium transition-colors ${
+              activeTab === 'catalog'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+            }`}
+          >
+            <Store className="w-5 h-5 mb-0.5" />
+            <span>Katalog</span>
+          </button>
+        )}
 
         <button
           onClick={() => handleSelect('products')}
@@ -56,17 +58,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ role, activeTa
         </button>
 
         {/* Center Floating Action Button (FAB) for POS Kasir */}
-        <div className="relative -top-5">
-          <button
-            onClick={() => handleSelect('pos')}
-            className={`w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-600/40 flex items-center justify-center transition-all duration-300 active:scale-95 ${
-              activeTab === 'pos' ? 'ring-4 ring-emerald-200 dark:ring-emerald-950 scale-105' : 'hover:-translate-y-1'
-            }`}
-            title="Buka Kasir"
-          >
-            <ShoppingBag className="w-7 h-7" />
-          </button>
-        </div>
+        {role === 'KASIR' && (
+          <div className="relative -top-5">
+            <button
+              onClick={() => handleSelect('pos')}
+              className={`w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-600/40 flex items-center justify-center transition-all duration-300 active:scale-95 ${
+                activeTab === 'pos' ? 'ring-4 ring-emerald-200 dark:ring-emerald-950 scale-105' : 'hover:-translate-y-1'
+              }`}
+              title="Buka Kasir"
+            >
+              <ShoppingBag className="w-7 h-7" />
+            </button>
+          </div>
+        )}
 
         {role === 'OWNER' && (
           <button

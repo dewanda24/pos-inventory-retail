@@ -11,6 +11,8 @@ import { PaymentModal } from '../components/pos/PaymentModal';
 import { StartShiftModal } from '../components/pos/StartShiftModal';
 import { CloseShiftModal } from '../components/pos/CloseShiftModal';
 import { PendingOrdersModal } from '../components/pos/PendingOrdersModal';
+import { QRCodeModal } from '../components/pos/QRCodeModal';
+import { TransactionHistoryModal } from '../components/pos/TransactionHistoryModal';
 import { useAppData } from '../context/AppDataContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -48,14 +50,31 @@ export const PosView: React.FC<PosViewProps> = ({
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
   const [isPendingOrdersOpen, setIsPendingOrdersOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { currentShift, sales } = useAppData();
+  const { currentShift, sales, setReceiptSale, loadAppData } = useAppData();
   const { lockScreen } = useAuth();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+
+  // Poll for pending orders every 10 seconds
+  useEffect(() => {
+    const fetchPendingOrders = async () => {
+      try {
+        const orders = await api.getPendingOrders();
+        setPendingOrdersCount(orders.length);
+      } catch (e) {}
+    };
+    fetchPendingOrders();
+    const interval = setInterval(fetchPendingOrders, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Keyboard Shortcuts (F2, F4, F8, F9, F10, Esc)
   useEffect(() => {
@@ -286,6 +305,10 @@ export const PosView: React.FC<PosViewProps> = ({
         onLogout={onLogout} 
         onCloseShift={() => setIsCloseShiftModalOpen(true)} 
         onLockScreen={lockScreen}
+        onShowQR={() => setIsQRModalOpen(true)}
+        onShowHistory={() => setIsHistoryModalOpen(true)}
+        onShowPendingOrders={() => setIsPendingOrdersOpen(true)}
+        pendingOrdersCount={pendingOrdersCount}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -449,6 +472,23 @@ export const PosView: React.FC<PosViewProps> = ({
         isOpen={isPendingOrdersOpen}
         onClose={() => setIsPendingOrdersOpen(false)}
         onProcessOrder={handleProcessPendingOrder}
+      />
+
+      {/* QR Code Modal for Customer Catalog */}
+      <QRCodeModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        url={`${window.location.origin}/katalog`}
+      />
+
+      {/* Transaction History Modal */}
+      <TransactionHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        sales={sales}
+        userId={user.id}
+        onViewReceipt={(sale) => setReceiptSale(sale)}
+        onRefresh={loadAppData}
       />
     </div>
   );

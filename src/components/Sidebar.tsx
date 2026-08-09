@@ -54,19 +54,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, role, activeTab, setActi
       id: 'pos',
       label: 'POS / Kasir',
       icon: ShoppingBag,
-      roles: ['OWNER', 'KASIR'],
+      roles: ['KASIR'],
       category: 'MAIN MENU'
     },
     {
       id: 'catalog',
-      label: 'Katalog Pelanggan',
+      label: 'Kiosk Pelanggan (QR)',
       icon: Store,
-      roles: ['OWNER', 'KASIR'],
+      roles: ['KASIR'],
       category: 'MAIN MENU'
     },
     {
       id: 'products',
-      label: 'Katalog Produk',
+      label: 'Master Produk',
       icon: Package,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
       roles: ['OWNER', 'KASIR'],
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, role, activeTab, setActi
       id: 'opname',
       label: 'Stock Opname',
       icon: ClipboardCheck,
-      roles: ['OWNER', 'KASIR'],
+      roles: ['OWNER'],
       category: 'INVENTORY'
     },
     {

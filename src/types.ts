@@ -229,6 +229,7 @@ export type NotificationItem = AppNotification;
 
 export interface DashboardSummary {
   todayOmzet: number;
+  yesterdayOmzet: number;
   todayGrossProfit: number;
   todayNetProfit: number;
   todayExpenses: number;

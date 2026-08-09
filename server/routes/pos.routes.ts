@@ -22,6 +22,17 @@ router.post('/sales', authenticateToken, async (req: any, res) => {
   } catch (err: any) { res.status(400).json({ error: err.message }); }
 });
 
+router.post('/sales/:id/void', authenticateToken, async (req: any, res) => {
+  try {
+    const { pin } = req.body;
+    if (!pin) throw new Error('PIN Owner dibutuhkan untuk membatalkan transaksi.');
+    await dbStore.voidSale(req.params.id, req.user.id, req.user.name, pin);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Pending Orders
 router.get('/orders/pending', authenticateToken, async (req, res) => {
   res.json(await dbStore.getPendingOrders());

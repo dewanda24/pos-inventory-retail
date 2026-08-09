@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, ChevronRight, LogOut, Lock } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Lock, Store, ReceiptText } from 'lucide-react';
 import { User } from '../../types';
 
 interface POSHeaderProps {
@@ -7,9 +7,13 @@ interface POSHeaderProps {
   onLogout?: () => void;
   onCloseShift?: () => void;
   onLockScreen?: () => void;
+  onShowQR?: () => void;
+  onShowHistory?: () => void;
+  onShowPendingOrders?: () => void;
+  pendingOrdersCount?: number;
 }
 
-export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShift, onLockScreen }) => {
+export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShift, onLockScreen, onShowQR, onShowHistory, onShowPendingOrders, pendingOrdersCount = 0 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between shadow-xs">
@@ -32,6 +36,41 @@ export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShi
 
       {/* Right: User Profile */}
       <div className="flex items-center gap-4">
+        {onShowPendingOrders && (
+          <button 
+            onClick={onShowPendingOrders}
+            className="relative flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40 rounded-lg text-sm font-bold border border-amber-200 dark:border-amber-800 transition-colors"
+            title="Pesanan Online (Self-Order)"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="hidden md:inline">Pesanan</span>
+            {pendingOrdersCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
+                {pendingOrdersCount}
+              </span>
+            )}
+          </button>
+        )}
+        {onShowHistory && (
+          <button 
+            onClick={onShowHistory}
+            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/40 rounded-lg text-sm font-bold border border-indigo-200 dark:border-indigo-800 transition-colors"
+            title="Riwayat Transaksi"
+          >
+            <ReceiptText className="w-4 h-4" />
+            <span className="hidden md:inline">Riwayat</span>
+          </button>
+        )}
+        {onShowQR && (
+          <button 
+            onClick={onShowQR}
+            className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 rounded-lg text-sm font-bold border border-emerald-200 dark:border-emerald-800 transition-colors"
+            title="Tampilkan QR Katalog Pelanggan"
+          >
+            <Store className="w-4 h-4" />
+            <span className="hidden md:inline">QR Katalog</span>
+          </button>
+        )}
         {onCloseShift && (
           <button 
             onClick={onCloseShift}
