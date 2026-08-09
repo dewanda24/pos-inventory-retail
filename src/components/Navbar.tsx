@@ -19,7 +19,6 @@ interface NavbarProps {
   onLogout: () => void;
   onOpenNotifications: () => void;
   onOpenLogin?: () => void;
-  onQuickSwitchUser?: (username: string) => void;
   darkMode: boolean;
   onToggleDarkMode?: () => void;
   setDarkMode?: (val: boolean) => void;
@@ -35,7 +34,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenNotifications,
   onOpenLogin,
-  onQuickSwitchUser,
   darkMode,
   onToggleDarkMode,
   setDarkMode,
@@ -68,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
+    <header className="h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors shadow-xs">
       {/* Left: Breadcrumbs & Page Info */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -151,40 +149,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <p className="font-bold text-slate-900 dark:text-white">{user.name}</p>
                   <p className="text-[10px] text-slate-400">@{user.username} • {user.role}</p>
                 </div>
-
-                {onQuickSwitchUser && (
-                  <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 my-1 space-y-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Demo Switch</p>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          onQuickSwitchUser('owner');
-                        }}
-                        className={`flex-1 py-1 text-[10px] font-bold rounded border ${
-                          user.role === 'OWNER'
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                        }`}
-                      >
-                        Owner
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          onQuickSwitchUser('kasir');
-                        }}
-                        className={`flex-1 py-1 text-[10px] font-bold rounded border ${
-                          user.role === 'KASIR'
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                        }`}
-                      >
-                        Kasir
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <button
                   onClick={() => {

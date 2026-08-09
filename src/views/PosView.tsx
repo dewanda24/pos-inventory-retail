@@ -7,6 +7,9 @@ import { POSHeader } from '../components/pos/POSHeader';
 import { ProductCard } from '../components/pos/ProductCard';
 import { CartPanel } from '../components/pos/CartPanel';
 import { PaymentModal } from '../components/pos/PaymentModal';
+import { StartShiftModal } from '../components/pos/StartShiftModal';
+import { CloseShiftModal } from '../components/pos/CloseShiftModal';
+import { useAppData } from '../context/AppDataContext';
 
 interface PosViewProps {
   user: User;
@@ -18,7 +21,6 @@ interface PosViewProps {
   onSaleComplete?: (sale: Sale) => void;
   onRefreshProducts?: () => void;
   onLogout?: () => void;
-  onQuickSwitchUser?: (username: string) => void;
 }
 
 export const PosView: React.FC<PosViewProps> = ({
@@ -30,8 +32,7 @@ export const PosView: React.FC<PosViewProps> = ({
   onSaleSuccess,
   onSaleComplete,
   onRefreshProducts,
-  onLogout,
-  onQuickSwitchUser
+  onLogout
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -42,8 +43,11 @@ export const PosView: React.FC<PosViewProps> = ({
   const [isCatalogMode, setIsCatalogMode] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const { currentShift, sales } = useAppData();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -198,6 +202,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
     try {
       const saleData = {
+        shiftId: currentShift?.id,
         items: cart,
         customerName: 'Pelanggan Umum', // Simplified for this layout update
         subtotal,
@@ -230,7 +235,7 @@ export const PosView: React.FC<PosViewProps> = ({
       <POSHeader 
         user={user} 
         onLogout={onLogout}
-        onQuickSwitchUser={onQuickSwitchUser}
+        onCloseShift={() => setIsCloseShiftModalOpen(true)}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -363,6 +368,23 @@ export const PosView: React.FC<PosViewProps> = ({
         onProcessPayment={handleCheckoutProcess}
         isSubmitting={isSubmitting}
       />
+
+      {/* Shift Management Modals */}
+      {!currentShift && (
+        <StartShiftModal onSuccess={() => {}} />
+      )}
+      
+      {currentShift && isCloseShiftModalOpen && (
+        <CloseShiftModal 
+          shift={currentShift} 
+          sales={sales}
+          onClose={() => setIsCloseShiftModalOpen(false)}
+          onSuccess={() => {
+            setIsCloseShiftModalOpen(false);
+            window.location.reload(); // Quick way to reset state and show StartShiftModal again
+          }} 
+        />
+      )}
     </div>
   );
 };

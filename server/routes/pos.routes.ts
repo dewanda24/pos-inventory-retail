@@ -21,6 +21,27 @@ router.post('/sales', authenticateToken, async (req: any, res) => {
     res.status(201).json(sale);
   } catch (err: any) { res.status(400).json({ error: err.message }); }
 });
+
+// Shift routes
+router.get('/shifts', authenticateToken, requireRole('OWNER'), async (req, res) => {
+  res.json(await dbStore.getShifts());
+});
+router.get('/shifts/current', authenticateToken, async (req: any, res) => {
+  res.json(await dbStore.getCurrentShift(req.user.id));
+});
+router.post('/shifts/start', authenticateToken, async (req: any, res) => {
+  try {
+    const shift = await dbStore.startShift(req.user.id, req.user.name, req.body.startingCash);
+    res.status(201).json(shift);
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+});
+router.post('/shifts/:id/close', authenticateToken, async (req: any, res) => {
+  try {
+    const shift = await dbStore.closeShift(req.params.id, req.user.id, req.user.name, req.body.actualEndingCash, req.body.notes);
+    res.json(shift);
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+});
+
 router.get('/opname', authenticateToken, async (req, res) => { res.json(await dbStore.getOpnames()); });
 router.post('/opname', authenticateToken, async (req: any, res) => {
   try {

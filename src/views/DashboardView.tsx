@@ -159,6 +159,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
             {summary.totalProductsCount} jenis varian produk terdaftar
           </div>
         </div>
+        {/* Financial KPI Row (Owner Only) */}
+        {role === 'OWNER' && (
+          <div className="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-2xs col-span-1 sm:col-span-2 lg:col-span-4 mt-2">
+            <div className="flex items-center gap-2 mb-3">
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="font-bold text-sm text-emerald-800 dark:text-emerald-400">Ringkasan Laba/Rugi (Hari Ini)</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider mb-1">Laba Kotor</p>
+                <p className="text-lg font-black text-emerald-700 dark:text-emerald-300">Rp {summary.todayGrossProfit.toLocaleString('id-ID')}</p>
+              </div>
+              <div className="border-l border-emerald-200 dark:border-emerald-800/50 pl-4">
+                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider mb-1">Pengeluaran</p>
+                <p className="text-lg font-black text-rose-600 dark:text-rose-400">- Rp {summary.todayExpenses.toLocaleString('id-ID')}</p>
+              </div>
+              <div className="border-l border-emerald-200 dark:border-emerald-800/50 pl-4 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-r-lg">
+                <p className="text-[10px] font-bold text-emerald-800 dark:text-emerald-200 uppercase tracking-wider mb-1">Laba Bersih</p>
+                <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">Rp {summary.todayNetProfit.toLocaleString('id-ID')}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mid Section: Chart & Top Products Row */}
@@ -167,12 +190,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h4 className="font-bold text-sm text-slate-900 dark:text-white">Grafik Penjualan Mingguan</h4>
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white">Grafik Penjualan & Laba Mingguan</h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">7 Hari Terakhir</p>
             </div>
-            <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
-              Omzet (Rp)
-            </span>
+            <div className="flex gap-2">
+              <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-md border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div> Omzet
+              </span>
+              {role === 'OWNER' && (
+                <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Laba Bersih
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="h-60 w-full">
@@ -183,6 +213,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
                     <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                   </linearGradient>
+                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#94a3b8" />
@@ -192,7 +226,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
                   tickFormatter={(v) => `${v / 1000}k`}
                 />
                 <Tooltip
-                  formatter={(value: any) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Omzet']}
+                  formatter={(value: any, name: string) => [`Rp ${Number(value).toLocaleString('id-ID')}`, name === 'omzet' ? 'Omzet' : 'Laba Bersih']}
                   contentStyle={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '11px' }}
                 />
                 <Area
@@ -203,6 +237,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ summary, role, onN
                   fillOpacity={1}
                   fill="url(#colorOmzet)"
                 />
+                {role === 'OWNER' && (
+                  <Area
+                    type="monotone"
+                    dataKey="netProfit"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#colorProfit)"
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -117,6 +117,7 @@ export interface Sale {
   id: string;
   invoiceNo: string;
   date: string;
+  shiftId?: string;
   userId: string;
   userName: string;
   customerName?: string;
@@ -218,14 +219,32 @@ export type NotificationItem = AppNotification;
 
 export interface DashboardSummary {
   todayOmzet: number;
+  todayGrossProfit: number;
+  todayNetProfit: number;
+  todayExpenses: number;
   todayTransactionsCount: number;
   todayItemsSold: number;
   lowStockCount: number;
   totalProductsCount: number;
   totalStockValue: number;
-  salesChartData: { date: string; omzet: number; count: number }[];
+  salesChartData: { date: string; omzet: number; count: number; grossProfit: number; netProfit: number }[];
   topSellingProducts: { productId: string; name: string; qtySold: number; totalOmzet: number }[];
   recentGoodsIn: GoodsInDocument[];
   recentLogs: AuditLog[];
   notifications: AppNotification[];
 }
+
+export interface CashierShift {
+  id: string;
+  userId: string;
+  userName: string;
+  startTime: string;
+  endTime?: string;
+  startingCash: number;
+  expectedEndingCash?: number;
+  actualEndingCash?: number;
+  difference?: number;
+  status: 'OPEN' | 'CLOSED';
+  notes?: string;
+}
+

@@ -16,10 +16,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
     <button
       onClick={() => onAdd(product)}
       disabled={isOutOfStock}
-      className={`p-3 rounded-2xl bg-white dark:bg-slate-900 border text-left transition-all flex flex-col justify-between group relative overflow-hidden ${
+      className={`p-3 rounded-2xl bg-white dark:bg-slate-900 border text-left transition-all duration-300 flex flex-col justify-between group relative overflow-hidden ${
         isOutOfStock
           ? 'opacity-60 border-slate-200 dark:border-slate-800 cursor-not-allowed'
-          : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-md active:scale-98'
+          : 'border-slate-200/60 dark:border-slate-800/60 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 active:scale-95'
       }`}
     >
       <div>

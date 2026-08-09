@@ -13,7 +13,6 @@ export interface AuthContextType {
   showLoginModal: boolean;
   setShowLoginModal: (show: boolean) => void;
   handleLoginSuccess: (user: User, token?: string) => void;
-  handleQuickSwitchUser: (username: string) => Promise<void>;
   handleLogout: () => void;
 }
 
@@ -59,21 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleQuickSwitchUser = async (username: string) => {
-    try {
-      const res = await api.login(username, 'password123');
-      setAuthSession(res.token, res.user);
-      setCurrentUser(res.user);
-      if (res.user.role === 'KASIR') {
-        setActiveTab('pos');
-      } else {
-        setActiveTab('dashboard');
-      }
-    } catch (err: any) {
-      alert(`Gagal ganti akun: ${err.message}`);
-    }
-  };
-
   const handleLogout = () => {
     api.logout();
     setCurrentUser(null);
@@ -105,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showLoginModal,
         setShowLoginModal,
         handleLoginSuccess,
-        handleQuickSwitchUser,
         handleLogout
       }}
     >

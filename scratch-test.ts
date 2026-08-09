@@ -1,25 +1,19 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-import { dbStore } from './src/db/store';
-
-async function test() {
-  console.log('Connecting to DB...', process.env.MONGODB_URI);
-  await dbStore.connect();
+async function testVercelLogin() {
+  console.log('Sending login request to Vercel...');
   try {
-    const user = await dbStore.findUserByUsername('owner');
-    console.log('User:', user);
-    if (user) {
-      const valid = await dbStore.verifyPassword(user.id, 'password123');
-      console.log('Valid:', valid);
-    } else {
-      console.log('User not found!');
-    }
+    const response = await fetch('https://pos-inventory-retail.vercel.app/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'owner', password: 'password123' })
+    });
+    
+    console.log(`STATUS: ${response.status} ${response.statusText}`);
+    const text = await response.text();
+    console.log('RESPONSE BODY:');
+    console.log(text);
   } catch (err) {
-    console.error('Error during find or verify:', err);
-  } finally {
-    process.exit(0);
+    console.error('Fetch error:', err);
   }
 }
 
-test();
+testVercelLogin();

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -32,7 +33,6 @@ function AppContent() {
     showLoginModal,
     setShowLoginModal,
     handleLoginSuccess,
-    handleQuickSwitchUser,
     handleLogout
   } = useAuth();
 
@@ -88,7 +88,6 @@ function AppContent() {
           storeName={settings?.storeName || 'Vape Store Retail'}
           onOpenLogin={() => setShowLoginModal(true)}
           onLogout={handleLogout}
-          onQuickSwitchUser={handleQuickSwitchUser}
           notifications={notifications}
           onOpenNotifications={() => setShowNotifDrawer(true)}
           darkMode={darkMode}
@@ -110,20 +109,27 @@ function AppContent() {
 
         {/* Main Content View Container */}
         <main className={`flex-1 overflow-y-auto ${activeTab === 'pos' ? 'bg-slate-100 dark:bg-slate-950' : 'p-4 md:p-6 pb-24 md:pb-8'}`}>
-          <div className={`${activeTab === 'pos' ? 'h-full' : 'max-w-7xl mx-auto'}`}>
-            {activeTab === 'pos' && (
-              <PosView
-                user={currentUser!}
-                products={products}
-                categories={categories}
-                onSaleComplete={handleSaleSuccess}
-                storeName={settings?.storeName || 'Vape Store Retail'}
-                onLogout={handleLogout}
-                onQuickSwitchUser={handleQuickSwitchUser}
-              />
-            )}
-
-            {activeTab === 'catalog' && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className={`w-full ${activeTab === 'pos' ? 'h-full' : 'max-w-7xl mx-auto'}`}
+            >
+              {activeTab === 'pos' && (
+                <PosView
+                  user={currentUser!}
+                  products={products}
+                  categories={categories}
+                  onSaleComplete={handleSaleSuccess}
+                  storeName={settings?.storeName || 'Vape Store Retail'}
+                  onLogout={handleLogout}
+                />
+              )}
+              
+              {activeTab === 'catalog' && (
               <CustomerCatalogView
                 products={products}
                 categories={categories}
@@ -197,10 +203,11 @@ function AppContent() {
 
             {activeTab === 'users' && <UsersView users={users} onRefresh={loadAppData} />}
 
-            {activeTab === 'settings' && (
-              <SettingsView settings={settings} onRefresh={loadAppData} />
-            )}
-          </div>
+                {activeTab === 'settings' && (
+                  <SettingsView settings={settings} onRefresh={loadAppData} />
+                )}
+              </motion.div>
+            </AnimatePresence>
         </main>
       </div>
 

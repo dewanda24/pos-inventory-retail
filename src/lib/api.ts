@@ -12,7 +12,8 @@ import {
   AuditLog,
   StoreSettings,
   AppNotification,
-  DashboardSummary
+  DashboardSummary,
+  CashierShift
 } from '../types';
 
 const TOKEN_KEY = 'pos_retail_auth_token';
@@ -173,6 +174,21 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(saleData)
     }),
+
+  // Shifts
+  getShifts: () => request<CashierShift[]>('/api/shifts'),
+  getCurrentShift: () => request<CashierShift | null>('/api/shifts/current'),
+  startShift: (startingCash: number) =>
+    request<CashierShift>('/api/shifts/start', {
+      method: 'POST',
+      body: JSON.stringify({ startingCash })
+    }),
+  closeShift: (id: string, actualEndingCash: number, notes?: string) =>
+    request<CashierShift>(`/api/shifts/${id}/close`, {
+      method: 'POST',
+      body: JSON.stringify({ actualEndingCash, notes })
+    }),
+
 
   // Opname
   getOpnames: () => request<StockOpname[]>('/api/opname'),

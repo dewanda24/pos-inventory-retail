@@ -1,6 +1,8 @@
-import React from 'react';
-import { Printer, CheckCircle2, X, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { Printer, CheckCircle2, X, Download, Bluetooth, Usb, Loader2, AlertCircle } from 'lucide-react';
 import { Sale, StoreSettings } from '../types';
+import { useThermalPrinter } from '../hooks/useThermalPrinter';
+import { generateReceiptBuffer } from '../lib/escpos';
 
 interface ReceiptModalProps {
   sale: Sale;
@@ -9,8 +11,21 @@ interface ReceiptModalProps {
 }
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, settings, onClose }) => {
-  const handlePrint = () => {
+  const { isPrinting, error, printViaBluetooth, printViaUSB } = useThermalPrinter();
+  const [showOptions, setShowOptions] = useState(false);
+
+  const handlePrintBrowser = () => {
     window.print();
+  };
+
+  const handlePrintBT = async () => {
+    const buffer = generateReceiptBuffer(sale, settings);
+    await printViaBluetooth(buffer);
+  };
+
+  const handlePrintUSB = async () => {
+    const buffer = generateReceiptBuffer(sale, settings);
+    await printViaUSB(buffer);
   };
 
   return (
@@ -118,21 +133,67 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, settings, onCl
           </div>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <div className="mx-4 mb-0 mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold flex items-start gap-2 no-print">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Modal Action Buttons */}
-        <div className="p-4 bg-slate-100 border-t border-slate-200 flex items-center gap-2 no-print">
-          <button
-            onClick={handlePrint}
-            className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Cetak Struk / Print</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all"
-          >
-            Tutup
-          </button>
+        <div className="p-4 bg-slate-100 border-t border-slate-200 flex flex-col gap-2 no-print">
+          {showOptions ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handlePrintBT}
+                disabled={isPrinting}
+                className="py-2 px-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                {isPrinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bluetooth className="w-3 h-3" />}
+                <span>Bluetooth</span>
+              </button>
+              <button
+                onClick={handlePrintUSB}
+                disabled={isPrinting}
+                className="py-2 px-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                {isPrinting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Usb className="w-3 h-3" />}
+                <span>USB/Serial</span>
+              </button>
+              <button
+                onClick={handlePrintBrowser}
+                className="col-span-2 py-2 px-2 bg-slate-600 hover:bg-slate-700 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <Printer className="w-3 h-3" />
+                <span>Printer Standar (Browser Dialog)</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowOptions(true)}
+                className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Cetak Struk / Print</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all"
+              >
+                Tutup
+              </button>
+            </div>
+          )}
+          {showOptions && (
+            <button
+              onClick={onClose}
+              className="w-full py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all"
+            >
+              Tutup
+            </button>
+          )}
         </div>
       </div>
 

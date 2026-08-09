@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import {
   User, Category, Supplier, Product, StockLedgerEntry, GoodsInDocument,
   Sale, StockOpname, Expense, ExpenseCategory, AuditLog, StoreSettings,
-  AppNotification, DashboardSummary
+  AppNotification, DashboardSummary, CashierShift
 } from '../types';
 import { createSeedData } from './seeds';
 
@@ -72,7 +72,7 @@ export class DBStore {
     }
   }
 
-  public async addAuditLog(userId: string, userName: string, userRole: any, action: string, module: string, details: string, ip = '127.0.0.1', device = 'Web Application') {
+  public async addAuditLog(userId: string, userName: string, userRole: any, action: string, module: string, details: string, ip = 'N/A', device = 'System') {
     const log: AuditLog = {
       id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       timestamp: new Date().toISOString(),
@@ -232,6 +232,58 @@ export class DBStore {
     return newSale;
   }
 
+  // --- Shift Management ---
+  public async getShifts(): Promise<CashierShift[]> {
+    return this.db.collection<CashierShift>('shifts').find().sort({ startTime: -1 }).toArray();
+  }
+
+  public async getCurrentShift(userId: string): Promise<CashierShift | null> {
+    return this.db.collection<CashierShift>('shifts').findOne({ userId, status: 'OPEN' });
+  }
+
+  public async startShift(userId: string, userName: string, startingCash: number): Promise<CashierShift> {
+    const existing = await this.getCurrentShift(userId);
+    if (existing) throw new Error('Anda masih memiliki shift yang berstatus OPEN. Silakan Tutup Kasir terlebih dahulu.');
+    
+    const newShift: CashierShift = {
+      id: `shift-${Date.now()}`,
+      userId,
+      userName,
+      startTime: new Date().toISOString(),
+      startingCash,
+      status: 'OPEN'
+    };
+    await this.db.collection('shifts').insertOne(newShift);
+    await this.addAuditLog(userId, userName, 'KASIR', 'START_SHIFT', 'POS', `Membuka kasir dengan modal awal Rp ${startingCash.toLocaleString('id-ID')}`);
+    return newShift;
+  }
+
+  public async closeShift(shiftId: string, userId: string, userName: string, actualEndingCash: number, notes?: string): Promise<CashierShift> {
+    const shift = await this.db.collection<CashierShift>('shifts').findOne({ id: shiftId });
+    if (!shift) throw new Error('Shift tidak ditemukan');
+    if (shift.status === 'CLOSED') throw new Error('Shift sudah ditutup sebelumnya');
+    if (shift.userId !== userId) throw new Error('Anda tidak memiliki akses menutup shift kasir lain');
+
+    const sales = await this.db.collection<Sale>('sales').find({ shiftId, status: 'COMPLETED', paymentMethod: 'CASH' }).toArray();
+    const totalCashSales = sales.reduce((acc, sale) => acc + sale.finalAmount, 0);
+    const expectedEndingCash = shift.startingCash + totalCashSales;
+    const difference = actualEndingCash - expectedEndingCash;
+
+    const updatedShift: CashierShift = {
+      ...shift,
+      endTime: new Date().toISOString(),
+      expectedEndingCash,
+      actualEndingCash,
+      difference,
+      status: 'CLOSED',
+      notes
+    };
+
+    await this.db.collection('shifts').updateOne({ id: shiftId }, { $set: updatedShift });
+    await this.addAuditLog(userId, userName, 'KASIR', 'CLOSE_SHIFT', 'POS', `Menutup kasir. Diharapkan: Rp ${expectedEndingCash.toLocaleString('id-ID')}, Aktual: Rp ${actualEndingCash.toLocaleString('id-ID')}, Selisih: Rp ${difference.toLocaleString('id-ID')}`);
+    return updatedShift;
+  }
+
   public async createStockOpname(opname: Omit<StockOpname, 'id' | 'docNo' | 'createdAt' | 'status'>, userId: string, userName: string) {
     const docNo = `SO-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`;
     const newOpname: StockOpname = { ...opname, id: `opn-${Date.now()}`, docNo, status: 'DRAFT', createdBy: userId, createdByName: userName, createdAt: new Date().toISOString() };
@@ -291,6 +343,16 @@ export class DBStore {
     const todayOmzet = todaySales.reduce((acc, s) => acc + s.finalAmount, 0);
     const todayTransactionsCount = todaySales.length;
     const todayItemsSold = todaySales.reduce((acc, s) => acc + s.items.reduce((itemAcc, item) => itemAcc + item.qty, 0), 0);
+    
+    const todayCostOfGoods = todaySales.reduce((acc, s) => acc + s.items.reduce((itemAcc, item) => itemAcc + (item.qty * item.buyPrice), 0), 0);
+    const todayGrossProfit = todayOmzet - todayCostOfGoods;
+
+    const expenses = await this.db.collection<Expense>('expenses').find().toArray();
+    const todayExpensesList = expenses.filter(e => e.date === todayStr);
+    const todayKasKeluar = todayExpensesList.filter(e => e.type === 'KAS_KELUAR').reduce((acc, e) => acc + e.amount, 0);
+    const todayKasMasuk = todayExpensesList.filter(e => e.type === 'KAS_MASUK').reduce((acc, e) => acc + e.amount, 0);
+    const todayExpenses = todayKasKeluar - todayKasMasuk;
+    const todayNetProfit = todayGrossProfit - todayKasKeluar + todayKasMasuk;
 
     const products = await this.db.collection<Product>('products').find({ status: 'ACTIVE' }).toArray();
     const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
@@ -302,7 +364,23 @@ export class DBStore {
       const d = new Date(Date.now() - i * 86400000);
       const dStr = d.toISOString().slice(0, 10);
       const daySales = sales.filter((s) => s.createdAt.startsWith(dStr));
-      salesChartData.push({ date: d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }), omzet: daySales.reduce((acc, s) => acc + s.finalAmount, 0), count: daySales.length });
+      
+      const dayOmzet = daySales.reduce((acc, s) => acc + s.finalAmount, 0);
+      const dayCOGS = daySales.reduce((acc, s) => acc + s.items.reduce((itemAcc, item) => itemAcc + (item.qty * item.buyPrice), 0), 0);
+      const dayGrossProfit = dayOmzet - dayCOGS;
+
+      const dayExpensesList = expenses.filter(e => e.date === dStr);
+      const dayKasKeluar = dayExpensesList.filter(e => e.type === 'KAS_KELUAR').reduce((acc, e) => acc + e.amount, 0);
+      const dayKasMasuk = dayExpensesList.filter(e => e.type === 'KAS_MASUK').reduce((acc, e) => acc + e.amount, 0);
+      const dayNetProfit = dayGrossProfit - dayKasKeluar + dayKasMasuk;
+
+      salesChartData.push({ 
+        date: d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }), 
+        omzet: dayOmzet, 
+        count: daySales.length,
+        grossProfit: dayGrossProfit,
+        netProfit: dayNetProfit
+      });
     }
 
     const prodMap: Record<string, any> = {};
@@ -316,7 +394,7 @@ export class DBStore {
     const topSellingProducts = Object.values(prodMap).sort((a, b) => b.qtySold - a.qtySold).slice(0, 5);
     
     return {
-      todayOmzet, todayTransactionsCount, todayItemsSold, lowStockCount, totalProductsCount, totalStockValue, salesChartData, topSellingProducts,
+      todayOmzet, todayGrossProfit, todayNetProfit, todayExpenses, todayTransactionsCount, todayItemsSold, lowStockCount, totalProductsCount, totalStockValue, salesChartData, topSellingProducts,
       recentGoodsIn: await this.db.collection('goodsInDocs').find().sort({ createdAt: -1 }).limit(5).toArray() as any,
       recentLogs: await this.db.collection('auditLogs').find().sort({ timestamp: -1 }).limit(8).toArray() as any,
       notifications: await this.db.collection('notifications').find().sort({ createdAt: -1 }).toArray() as any

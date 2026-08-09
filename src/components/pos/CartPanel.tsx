@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, AlertCircle, Trash2, Minus, Plus } from 'lucide-react';
 import { SaleItem } from '../../types';
 
@@ -90,49 +91,56 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             <p className="text-xs mt-1 text-center max-w-[200px]">Pilih produk atau scan barcode untuk menambahkan barang.</p>
           </div>
         ) : (
-          cart.map((item) => (
-            <div
-              key={item.productId}
-              className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 shadow-xs flex items-center gap-3"
-            >
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {item.productName}
-                </h4>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  @ Rp {item.sellPrice.toLocaleString('id-ID')}
-                </p>
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateCartQty(item.productId, -1)}
-                      className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-xs font-bold w-6 text-center text-slate-900 dark:text-white">
-                      {item.qty}
-                    </span>
-                    <button
-                      onClick={() => updateCartQty(item.productId, 1)}
-                      className="w-6 h-6 rounded-md bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                    Rp {item.subtotal.toLocaleString('id-ID')}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => removeFromCart(item.productId)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/50 transition-colors"
+          <AnimatePresence mode="popLayout">
+            {cart.map((item) => (
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                transition={{ duration: 0.2 }}
+                key={item.productId}
+                className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 shadow-sm flex items-center gap-3"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {item.productName}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    @ Rp {item.sellPrice.toLocaleString('id-ID')}
+                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateCartQty(item.productId, -1)}
+                        className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-90 transition-all"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-xs font-bold w-6 text-center text-slate-900 dark:text-white tabular-nums">
+                        {item.qty}
+                      </span>
+                      <button
+                        onClick={() => updateCartQty(item.productId, 1)}
+                        className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900 active:scale-90 transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white tabular-nums">
+                      Rp {item.subtotal.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.productId)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/50 hover:scale-105 active:scale-95 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 

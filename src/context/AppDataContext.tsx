@@ -12,7 +12,8 @@ import {
   ExpenseCategory,
   DashboardSummary,
   StoreSettings,
-  NotificationItem
+  NotificationItem,
+  CashierShift
 } from '../types';
 import { api } from '../lib/api';
 import { useAuth } from './AuthContext';
@@ -43,6 +44,8 @@ export interface AppDataContextType {
   setSettings: React.Dispatch<React.SetStateAction<StoreSettings | null>>;
   notifications: NotificationItem[];
   setNotifications: React.Dispatch<React.SetStateAction<NotificationItem[]>>;
+  currentShift: CashierShift | null;
+  setCurrentShift: React.Dispatch<React.SetStateAction<CashierShift | null>>;
   loadAppData: () => Promise<void>;
   receiptSale: Sale | null;
   setReceiptSale: (sale: Sale | null) => void;
@@ -69,6 +72,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [currentShift, setCurrentShift] = useState<CashierShift | null>(null);
+
 
   // UI Modals
   const [receiptSale, setReceiptSale] = useState<Sale | null>(null);
@@ -92,7 +97,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         expCatData,
         userData,
         settData,
-        notifData
+        notifData,
+        shiftData
       ] = await Promise.all([
         api.getDashboardSummary(),
         api.getProducts(),
@@ -106,7 +112,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         currentUser?.role === 'OWNER' ? api.getExpenseCategories() : Promise.resolve([]),
         currentUser?.role === 'OWNER' ? api.getUsers() : Promise.resolve([]),
         api.getSettings(),
-        api.getNotifications()
+        api.getNotifications(),
+        api.getCurrentShift()
       ]);
 
       setSummary(sumData);
@@ -122,6 +129,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (userData.length > 0) setUsers(userData);
       setSettings(settData);
       setNotifications(notifData);
+      setCurrentShift(shiftData);
     } catch (err: any) {
       console.error('Error loading app data:', err);
       if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
@@ -171,6 +179,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setSettings,
         notifications,
         setNotifications,
+        currentShift,
+        setCurrentShift,
         loadAppData,
         receiptSale,
         setReceiptSale,
