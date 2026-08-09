@@ -22,6 +22,21 @@ router.post('/sales', authenticateToken, async (req: any, res) => {
   } catch (err: any) { res.status(400).json({ error: err.message }); }
 });
 
+// Pending Orders
+router.get('/orders/pending', authenticateToken, async (req, res) => {
+  res.json(await dbStore.getPendingOrders());
+});
+
+router.put('/orders/pending/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    await dbStore.updatePendingOrderStatus(req.params.id, status);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Shift routes
 router.get('/shifts', authenticateToken, requireRole('OWNER'), async (req, res) => {
   res.json(await dbStore.getShifts());

@@ -33,4 +33,17 @@ router.get('/catalog', async (req, res) => {
   }
 });
 
+router.post('/orders', async (req, res) => {
+  try {
+    const { customerName, tableNumber, items, subtotal } = req.body;
+    if (!customerName || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Data pesanan tidak lengkap' });
+    }
+    const order = await dbStore.createPendingOrder({ customerName, tableNumber, items, subtotal });
+    res.status(201).json(order);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

@@ -7,10 +7,10 @@ router.get('/', authenticateToken, requireRole('OWNER'), async (req, res) => {
 });
 router.post('/', authenticateToken, requireRole('OWNER'), async (req: any, res) => {
   try {
-    const { username, password, name, role, status } = req.body;
+    const { username, password, name, role, status, pin } = req.body;
     const existing = await dbStore.findUserByUsername(username);
     if (existing) return res.status(400).json({ error: 'Username sudah digunakan' });
-    const newUser = await dbStore.createUser({ username, name, role, status: status || 'ACTIVE' }, password);
+    const newUser = await dbStore.createUser({ username, name, role, status: status || 'ACTIVE' }, password, pin);
     await dbStore.addAuditLog(req.user.id, req.user.name, 'OWNER', 'CREATE_USER', 'USERS', `Membuat akun pengguna: ${username}`);
     res.status(201).json(newUser);
   } catch (err: any) { res.status(400).json({ error: err.message }); }
@@ -18,8 +18,8 @@ router.post('/', authenticateToken, requireRole('OWNER'), async (req: any, res) 
 router.put('/:id', authenticateToken, requireRole('OWNER'), async (req: any, res) => {
   try {
     const { id } = req.params;
-    const { username, password, name, role, status } = req.body;
-    const updated = await dbStore.updateUser(id, { username, name, role, status }, password);
+    const { username, password, name, role, status, pin } = req.body;
+    const updated = await dbStore.updateUser(id, { username, name, role, status }, password, pin);
     await dbStore.addAuditLog(req.user.id, req.user.name, 'OWNER', 'UPDATE_USER', 'USERS', `Mengubah data pengguna: ${username}`);
     res.json(updated);
   } catch (err: any) { res.status(400).json({ error: err.message }); }

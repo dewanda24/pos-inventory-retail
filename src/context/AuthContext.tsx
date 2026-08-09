@@ -14,6 +14,9 @@ export interface AuthContextType {
   setShowLoginModal: (show: boolean) => void;
   handleLoginSuccess: (user: User, token?: string) => void;
   handleLogout: () => void;
+  isLocked: boolean;
+  lockScreen: () => void;
+  unlockScreen: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Initialize Auth
   useEffect(() => {
@@ -35,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setActiveTab('pos');
       } else {
         setActiveTab('dashboard');
+      }
+      
+      const lockedState = localStorage.getItem('pos_retail_locked');
+      if (lockedState === 'true') {
+        setIsLocked(true);
       }
     } else {
       setShowLoginModal(true);
@@ -61,7 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLogout = () => {
     api.logout();
     setCurrentUser(null);
+    setIsLocked(false);
+    localStorage.removeItem('pos_retail_locked');
     setShowLoginModal(true);
+  };
+
+  const lockScreen = () => {
+    setIsLocked(true);
+    localStorage.setItem('pos_retail_locked', 'true');
+  };
+
+  const unlockScreen = () => {
+    setIsLocked(false);
+    localStorage.removeItem('pos_retail_locked');
   };
 
   const handleNavigateTab = (tab: string) => {
@@ -89,7 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showLoginModal,
         setShowLoginModal,
         handleLoginSuccess,
-        handleLogout
+        handleLogout,
+        isLocked,
+        lockScreen,
+        unlockScreen
       }}
     >
       {children}

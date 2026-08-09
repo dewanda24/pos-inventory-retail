@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Bell, ChevronRight, LogOut } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Lock } from 'lucide-react';
 import { User } from '../../types';
 
 interface POSHeaderProps {
   user: User;
   onLogout?: () => void;
   onCloseShift?: () => void;
+  onLockScreen?: () => void;
 }
 
-export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShift }) => {
+export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShift, onLockScreen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between shadow-xs">
@@ -38,6 +39,16 @@ export const POSHeader: React.FC<POSHeaderProps> = ({ user, onLogout, onCloseShi
           >
             <LogOut className="w-4 h-4" />
             Tutup Kasir
+          </button>
+        )}
+        {onLockScreen && (
+          <button 
+            onClick={onLockScreen}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-700 transition-colors"
+            title="Kunci Layar (PIN)"
+          >
+            <Lock className="w-4 h-4" />
+            <span className="hidden md:inline">Kunci</span>
           </button>
         )}
         <button className="relative text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">

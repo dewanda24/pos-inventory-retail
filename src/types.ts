@@ -133,6 +133,16 @@ export interface Sale {
   createdAt: string;
 }
 
+export interface PendingOrder {
+  id: string;
+  customerName: string;
+  tableNumber?: string;
+  items: SaleItem[];
+  subtotal: number;
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+}
+
 export type OpnameStatus = 'DRAFT' | 'APPROVED' | 'REJECTED';
 
 export interface OpnameItem {

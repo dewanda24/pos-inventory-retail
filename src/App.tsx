@@ -7,6 +7,17 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { LoginModal } from './components/LoginModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { NotificationDrawer } from './components/NotificationDrawer';
+import { LockScreen } from './components/LockScreen';
+
+const AccessDenied = () => (
+  <div className="flex flex-col items-center justify-center h-full text-slate-500 py-20">
+    <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4">
+      <span className="text-2xl font-bold">!</span>
+    </div>
+    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Akses Ditolak</h2>
+    <p>Akun Anda (KASIR) tidak memiliki izin untuk melihat halaman ini.</p>
+  </div>
+);
 
 import { PosView } from './views/PosView';
 import { DashboardView } from './views/DashboardView';
@@ -34,7 +45,8 @@ function AppContent() {
     showLoginModal,
     setShowLoginModal,
     handleLoginSuccess,
-    handleLogout
+    handleLogout,
+    isLocked
   } = useAuth();
 
   const {
@@ -156,58 +168,70 @@ function AppContent() {
               />
             )}
 
-            {(activeTab === 'inventory' || activeTab === 'ledger') && (
-              <InventoryView
-                products={products}
-                suppliers={suppliers}
-                goodsInDocs={goodsInDocs}
-                ledger={ledger}
-                initialTab={activeTab === 'ledger' ? 'ledger' : 'goods-in'}
-                onRefresh={loadAppData}
-              />
-            )}
+            {/* RESTRICTED VIEWS FOR OWNER ONLY */}
+            {(() => {
+              const isOwner = currentUser?.role === 'OWNER';
+              if (!isOwner && ['inventory', 'ledger', 'opname', 'reports', 'financials', 'suppliers', 'audit-logs', 'users', 'settings'].includes(activeTab)) {
+                return <AccessDenied />;
+              }
 
-            {activeTab === 'opname' && (
-              <OpnameView
-                products={products}
-                opnames={opnames}
-                role={currentUser?.role || 'KASIR'}
-                onRefresh={loadAppData}
-              />
-            )}
+              return (
+                <>
+                  {(activeTab === 'inventory' || activeTab === 'ledger') && (
+                    <InventoryView
+                      products={products}
+                      suppliers={suppliers}
+                      goodsInDocs={goodsInDocs}
+                      ledger={ledger}
+                      initialTab={activeTab === 'ledger' ? 'ledger' : 'goods-in'}
+                      onRefresh={loadAppData}
+                    />
+                  )}
 
-            {activeTab === 'reports' && (
-              <ReportsView sales={sales} products={products} users={users} />
-            )}
+                  {activeTab === 'opname' && (
+                    <OpnameView
+                      products={products}
+                      opnames={opnames}
+                      role={currentUser?.role || 'KASIR'}
+                      onRefresh={loadAppData}
+                    />
+                  )}
 
-            {activeTab === 'financials' && (
-              <FinancialsView
-                expenses={expenses}
-                expenseCategories={expenseCategories}
-                totalGrossProfit={totalGrossProfit}
-                onRefresh={loadAppData}
-              />
-            )}
+                  {activeTab === 'reports' && (
+                    <ReportsView sales={sales} products={products} users={users} />
+                  )}
 
-            {activeTab === 'suppliers' && (
-              <SuppliersView
-                suppliers={suppliers}
-                products={products}
-                onNavigateTab={handleNavigateTab}
-                onRefresh={loadAppData}
-              />
-            )}
+                  {activeTab === 'financials' && (
+                    <FinancialsView
+                      expenses={expenses}
+                      expenseCategories={expenseCategories}
+                      totalGrossProfit={totalGrossProfit}
+                      onRefresh={loadAppData}
+                    />
+                  )}
 
-            {activeTab === 'audit-logs' && (
-              <AuditLogsView logs={summary?.recentLogs || []} />
-            )}
+                  {activeTab === 'suppliers' && (
+                    <SuppliersView
+                      suppliers={suppliers}
+                      products={products}
+                      onNavigateTab={handleNavigateTab}
+                      onRefresh={loadAppData}
+                    />
+                  )}
 
-            {activeTab === 'users' && <UsersView users={users} onRefresh={loadAppData} />}
+                  {activeTab === 'audit-logs' && (
+                    <AuditLogsView logs={summary?.recentLogs || []} />
+                  )}
 
-                {activeTab === 'settings' && (
-                  <SettingsView settings={settings} onRefresh={loadAppData} />
-                )}
-              </motion.div>
+                  {activeTab === 'users' && <UsersView users={users} onRefresh={loadAppData} />}
+
+                  {activeTab === 'settings' && (
+                    <SettingsView settings={settings} onRefresh={loadAppData} />
+                  )}
+                </>
+              );
+            })()}
+          </motion.div>
             </AnimatePresence>
         </main>
       </div>
@@ -225,6 +249,9 @@ function AppContent() {
         onClose={() => setShowLoginModal(false)}
         onLoginSuccess={handleLoginSuccess}
       />
+
+      {/* Lock Screen */}
+      {isLocked && <LockScreen />}
 
       {/* Thermal Receipt Modal */}
       {receiptSale && (

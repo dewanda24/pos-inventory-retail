@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import {
   User, Category, Supplier, Product, StockLedgerEntry, GoodsInDocument,
   Sale, StockOpname, Expense, ExpenseCategory, AuditLog, StoreSettings,
-  AppNotification, DashboardSummary, CashierShift
+  AppNotification, DashboardSummary, CashierShift, PendingOrder
 } from '../types';
 import { createSeedData } from './seeds';
 
@@ -134,22 +134,35 @@ export class DBStore {
     return bcrypt.compareSync(passwordPlain, record.hash);
   }
 
-  public async createUser(user: Omit<User, 'id' | 'createdAt'>, passwordPlain: string): Promise<User> {
+  public async createUser(user: Omit<User, 'id' | 'createdAt'>, passwordPlain: string, pinPlain?: string): Promise<User> {
     const id = `usr-${Date.now()}`;
     const newUser: User = { ...user, id, createdAt: new Date().toISOString() };
     await this.db.collection('users').insertOne(newUser);
     const hash = bcrypt.hashSync(passwordPlain, 10);
-    await this.db.collection('userPasswords').insertOne({ userId: id, hash });
+    const passwordDoc: any = { userId: id, hash };
+    if (pinPlain) {
+      passwordDoc.pinHash = bcrypt.hashSync(pinPlain, 10);
+    }
+    await this.db.collection('userPasswords').insertOne(passwordDoc);
     return newUser;
   }
 
-  public async updateUser(id: string, updates: Partial<User>, passwordPlain?: string): Promise<User> {
+  public async updateUser(id: string, updates: Partial<User>, passwordPlain?: string, pinPlain?: string): Promise<User> {
     await this.db.collection('users').updateOne({ id }, { $set: updates });
-    if (passwordPlain) {
-      const hash = bcrypt.hashSync(passwordPlain, 10);
-      await this.db.collection('userPasswords').updateOne({ userId: id }, { $set: { hash } });
+    const passwordUpdates: any = {};
+    if (passwordPlain) passwordUpdates.hash = bcrypt.hashSync(passwordPlain, 10);
+    if (pinPlain) passwordUpdates.pinHash = bcrypt.hashSync(pinPlain, 10);
+    
+    if (Object.keys(passwordUpdates).length > 0) {
+      await this.db.collection('userPasswords').updateOne({ userId: id }, { $set: passwordUpdates });
     }
     return this.db.collection<User>('users').findOne({ id }) as Promise<User>;
+  }
+  
+  public async verifyPin(userId: string, pinPlain: string): Promise<boolean> {
+    const doc = await this.db.collection('userPasswords').findOne({ userId });
+    if (!doc || !doc.pinHash) return false;
+    return bcrypt.compareSync(pinPlain, doc.pinHash);
   }
   
   public async deleteUser(id: string, reqUserId: string): Promise<boolean> {
@@ -230,6 +243,27 @@ export class DBStore {
     await this.db.collection('sales').insertOne(newSale);
     await this.addAuditLog(userId, userName, 'KASIR', 'CREATE_SALE', 'POS', `Penjualan ${invoiceNo} senilai Rp ${saleData.finalAmount.toLocaleString('id-ID')} berhasil`);
     return newSale;
+  }
+  // --- Pending Orders ---
+  public async createPendingOrder(orderData: Omit<PendingOrder, 'id' | 'status' | 'createdAt'>): Promise<PendingOrder> {
+    const id = `po-${Date.now()}`;
+    const newOrder: PendingOrder = {
+      ...orderData,
+      id,
+      status: 'PENDING',
+      createdAt: new Date().toISOString()
+    };
+    await this.db.collection('pendingOrders').insertOne(newOrder);
+    return newOrder;
+  }
+
+  public async getPendingOrders(): Promise<PendingOrder[]> {
+    return this.db.collection<PendingOrder>('pendingOrders').find({ status: 'PENDING' }).sort({ createdAt: 1 }).toArray();
+  }
+
+  public async updatePendingOrderStatus(id: string, status: 'COMPLETED' | 'CANCELLED'): Promise<boolean> {
+    await this.db.collection('pendingOrders').updateOne({ id }, { $set: { status } });
+    return true;
   }
 
   // --- Shift Management ---

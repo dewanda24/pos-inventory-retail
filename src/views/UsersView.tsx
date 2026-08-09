@@ -16,7 +16,8 @@ export const UsersView: React.FC<UsersViewProps> = ({ users, onRefresh }) => {
     name: '',
     role: 'KASIR' as 'OWNER' | 'KASIR',
     status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE',
-    password: ''
+    password: '',
+    pin: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ users, onRefresh }) => {
 
   const openAddUser = () => {
     setEditingUser(null);
-    setFormData({ username: '', name: '', role: 'KASIR', status: 'ACTIVE', password: '' });
+    setFormData({ username: '', name: '', role: 'KASIR', status: 'ACTIVE', password: '', pin: '' });
     setErrorMsg(null);
     setShowModal(true);
   };
@@ -36,7 +37,8 @@ export const UsersView: React.FC<UsersViewProps> = ({ users, onRefresh }) => {
       name: user.name,
       role: user.role,
       status: user.status,
-      password: ''
+      password: '',
+      pin: ''
     });
     setErrorMsg(null);
     setShowModal(true);
@@ -57,13 +59,16 @@ export const UsersView: React.FC<UsersViewProps> = ({ users, onRefresh }) => {
         if (formData.password.trim()) {
           updatePayload.password = formData.password.trim();
         }
+        if (formData.pin.trim()) {
+          updatePayload.pin = formData.pin.trim();
+        }
         await api.updateUser(editingUser.id, updatePayload);
       } else {
         await api.createUser(formData);
       }
       onRefresh();
       setShowModal(false);
-      setFormData({ username: '', name: '', role: 'KASIR', status: 'ACTIVE', password: '' });
+      setFormData({ username: '', name: '', role: 'KASIR', status: 'ACTIVE', password: '', pin: '' });
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menyimpan user.');
     } finally {
@@ -236,6 +241,19 @@ export const UsersView: React.FC<UsersViewProps> = ({ users, onRefresh }) => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder={editingUser ? '(Kosongkan jika tidak ubah password)' : 'password123'}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">PIN Kunci Layar (Opsional)</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={formData.pin}
+                  onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                  placeholder={editingUser ? '(Kosongkan jika tidak ubah PIN)' : 'Contoh: 123456'}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl dark:text-white font-mono tracking-widest"
                 />
               </div>
 

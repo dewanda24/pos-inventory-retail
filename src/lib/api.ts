@@ -13,7 +13,8 @@ import {
   StoreSettings,
   AppNotification,
   DashboardSummary,
-  CashierShift
+  CashierShift,
+  PendingOrder
 } from '../types';
 
 const TOKEN_KEY = 'pos_retail_auth_token';
@@ -81,6 +82,10 @@ export const api = {
     }),
 
   getCurrentUser: () => request<{ user: User }>('/api/auth/me'),
+  verifyPin: (pin: string) => request<{ success: boolean }>('/api/auth/verify-pin', {
+    method: 'POST',
+    body: JSON.stringify({ pin })
+  }),
 
   // Users
   getUsers: () => request<User[]>('/api/users'),
@@ -133,14 +138,6 @@ export const api = {
     }),
 
   // Products
-  getPublicCatalog: async () => {
-    // Make a raw fetch without auth header for public catalog
-    const res = await fetch('/api/public/catalog', {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!res.ok) throw new Error('Failed to load public catalog');
-    return res.json() as Promise<{ products: Product[]; categories: Category[] }>;
-  },
   getProducts: () => request<Product[]>('/api/products'),
   createProduct: (product: Partial<Product>) =>
     request<Product>('/api/products', {
@@ -244,5 +241,34 @@ export const api = {
     request<{ success: boolean }>('/api/system/restore', {
       method: 'POST',
       body: JSON.stringify({ backupData })
-    })
+    }),
+
+  // Public Catalog
+  getPublicCatalog: async () => {
+    // Make a raw fetch without auth header for public catalog
+    const res = await fetch('/api/public/catalog', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) throw new Error('Failed to load public catalog');
+    return res.json() as Promise<{ products: Product[]; categories: Category[] }>;
+  },
+  submitPublicOrder: async (order: any) => {
+    const res = await fetch('/api/public/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error || 'Failed to submit order');
+    }
+    return res.json() as Promise<PendingOrder>;
+  },
+
+  // Pending Orders (POS)
+  getPendingOrders: () => request<PendingOrder[]>('/api/pos/orders/pending'),
+  updatePendingOrderStatus: (id: string, status: 'COMPLETED' | 'CANCELLED') => request<{ success: boolean }>(`/api/pos/orders/pending/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status })
+  })
 };

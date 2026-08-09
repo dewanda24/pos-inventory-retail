@@ -14,10 +14,13 @@ import {
   Sparkles,
   ArrowRight,
   Info,
-  Tag
+  Tag,
+  Send
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Product, Category } from '../types';
+import { api } from '../lib/api';
+import { toast } from 'sonner';
 
 interface CustomerCatalogViewProps {
   products: Product[];
@@ -43,6 +46,9 @@ export const CustomerCatalogView: React.FC<CustomerCatalogViewProps> = ({
   const [showWishlistModal, setShowWishlistModal] = useState(false);
   const [quickCheckModalProduct, setQuickCheckModalProduct] = useState<Product | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [tableNumber, setTableNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter products based on search and category (only ACTIVE products)
   const filteredProducts = useMemo(() => {
@@ -120,6 +126,34 @@ export const CustomerCatalogView: React.FC<CustomerCatalogViewProps> = ({
   const handleClearWishlist = () => {
     setWishlist({});
     setShowWishlistModal(false);
+    setCustomerName('');
+    setTableNumber('');
+  };
+
+  const handleSubmitOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName.trim() || totalWishlistCount === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      await api.submitPublicOrder({
+        customerName: customerName.trim(),
+        tableNumber: tableNumber.trim(),
+        subtotal: totalWishlistAmount,
+        items: wishlistItems.map(i => ({
+          productId: i.product.id,
+          productName: i.product.name,
+          qty: i.qty,
+          price: i.product.sellPrice
+        }))
+      });
+      toast.success('Pesanan berhasil dikirim ke Kasir!');
+      handleClearWishlist();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengirim pesanan');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const wishlistItems: WishlistItem[] = Object.values(wishlist) as WishlistItem[];
@@ -360,11 +394,11 @@ export const CustomerCatalogView: React.FC<CustomerCatalogViewProps> = ({
 
             <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
               <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 p-4 rounded-2xl flex items-center gap-3">
-                <QrCode className="w-10 h-10 text-emerald-600 shrink-0" />
+                <Send className="w-8 h-8 text-emerald-600 shrink-0" />
                 <div className="text-xs">
-                  <p className="font-bold text-slate-900 dark:text-white">Tunjukkan ke Meja Kasir</p>
+                  <p className="font-bold text-slate-900 dark:text-white">Kirim Pesanan ke Kasir</p>
                   <p className="text-slate-600 dark:text-slate-300">
-                    Kasir dapat memvalidasi barang belanjaan Anda berdasarkan daftar atau barcode pesanan ini.
+                    Pesanan Anda akan masuk ke sistem Kasir. Anda tinggal membayar dan menunggu pesanan disiapkan.
                   </p>
                 </div>
               </div>
@@ -412,29 +446,63 @@ export const CustomerCatalogView: React.FC<CustomerCatalogViewProps> = ({
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-slate-500">Total Estimasi Tagihan:</span>
-                  <p className="text-lg font-extrabold text-slate-900 dark:text-white">
-                    Rp {totalWishlistAmount.toLocaleString('id-ID')}
-                  </p>
+              <form onSubmit={handleSubmitOrder} className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Pemesan *</label>
+                    <input
+                      type="text"
+                      required
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Cth: Budi"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl dark:text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No Meja (Opsional)</label>
+                    <input
+                      type="text"
+                      value={tableNumber}
+                      onChange={(e) => setTableNumber(e.target.value)}
+                      placeholder="Cth: 12"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl dark:text-white text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-xs text-slate-500">Total Estimasi Tagihan:</span>
+                    <p className="text-lg font-extrabold text-slate-900 dark:text-white">
+                      Rp {totalWishlistAmount.toLocaleString('id-ID')}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleClearWishlist}
-                    className="px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl"
+                    className="flex-1 py-2 text-xs font-bold text-rose-600 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors"
                   >
-                    Kosongkan Daftar
+                    Batal
                   </button>
                   <button
-                    onClick={() => setShowWishlistModal(false)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs"
+                    type="submit"
+                    disabled={isSubmitting || !customerName.trim() || totalWishlistCount === 0}
+                    className="flex-[2] py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    Tutup
+                    {isSubmitting ? (
+                      'Mengirim...'
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" /> Kirim ke Kasir
+                      </>
+                    )}
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>

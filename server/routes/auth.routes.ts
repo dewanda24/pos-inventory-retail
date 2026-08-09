@@ -20,4 +20,11 @@ router.get('/me', authenticateToken, async (req: any, res) => {
   if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
   res.json({ user });
 });
+router.post('/verify-pin', authenticateToken, async (req: any, res) => {
+  const { pin } = req.body;
+  if (!pin) return res.status(400).json({ error: 'PIN diperlukan' });
+  const valid = await dbStore.verifyPin(req.user.id, pin);
+  if (!valid) return res.status(401).json({ error: 'PIN salah' });
+  res.json({ success: true });
+});
 export default router;

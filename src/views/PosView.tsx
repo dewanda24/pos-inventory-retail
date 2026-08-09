@@ -10,7 +10,9 @@ import { CartPanel } from '../components/pos/CartPanel';
 import { PaymentModal } from '../components/pos/PaymentModal';
 import { StartShiftModal } from '../components/pos/StartShiftModal';
 import { CloseShiftModal } from '../components/pos/CloseShiftModal';
+import { PendingOrdersModal } from '../components/pos/PendingOrdersModal';
 import { useAppData } from '../context/AppDataContext';
+import { useAuth } from '../context/AuthContext';
 
 interface PosViewProps {
   user: User;
@@ -45,10 +47,12 @@ export const PosView: React.FC<PosViewProps> = ({
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
+  const [isPendingOrdersOpen, setIsPendingOrdersOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { currentShift, sales } = useAppData();
+  const { lockScreen } = useAuth();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -199,6 +203,42 @@ export const PosView: React.FC<PosViewProps> = ({
   const taxAmount = Math.round((subtotal - discountAmount) * (taxPercent / 100));
   const finalAmount = Math.max(0, subtotal - discountAmount + taxAmount);
 
+  const handleProcessPendingOrder = async (order: any) => {
+    if (cart.length > 0) {
+      if (!confirm('Keranjang Anda saat ini tidak kosong. Ganti dengan pesanan online ini?')) {
+        return;
+      }
+    }
+
+    try {
+      // Mark as completed in DB so it doesn't show up again
+      await api.updatePendingOrderStatus(order.id, 'COMPLETED');
+      
+      // Load items into cart
+      const newCart: SaleItem[] = [];
+      for (const item of order.items) {
+        const prod = products.find(p => p.id === item.productId);
+        if (prod) {
+          newCart.push({
+            productId: prod.id,
+            productName: prod.name,
+            sku: prod.sku,
+            barcode: prod.barcode,
+            qty: item.qty,
+            buyPrice: prod.buyPrice,
+            sellPrice: prod.sellPrice,
+            subtotal: item.qty * prod.sellPrice
+          });
+        }
+      }
+      setCart(newCart);
+      setIsPendingOrdersOpen(false);
+      toast.success(`Pesanan dari ${order.customerName} ditarik ke kasir.`);
+    } catch (err: any) {
+      toast.error('Gagal memproses pesanan: ' + err.message);
+    }
+  };
+
   // Checkout Handler (Triggered from PaymentModal)
   const handleCheckoutProcess = async (paymentMethod: PaymentMethod, payAmount: number) => {
     if (cart.length === 0) return;
@@ -243,8 +283,9 @@ export const PosView: React.FC<PosViewProps> = ({
     <div className="flex flex-col h-full bg-slate-100 dark:bg-slate-950">
       <POSHeader 
         user={user} 
-        onLogout={onLogout}
-        onCloseShift={() => setIsCloseShiftModalOpen(true)}
+        onLogout={onLogout} 
+        onCloseShift={() => setIsCloseShiftModalOpen(true)} 
+        onLockScreen={lockScreen}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -282,6 +323,14 @@ export const PosView: React.FC<PosViewProps> = ({
               title="Mode Katalog (Sembunyikan Keranjang)"
             >
               {isCatalogMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </button>
+
+            <button
+              onClick={() => setIsPendingOrdersOpen(true)}
+              className="px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl flex items-center justify-center gap-2 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500 hover:text-indigo-700 transition-colors hidden sm:flex font-bold whitespace-nowrap"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              Pesanan Online
             </button>
           </div>
 
@@ -394,6 +443,13 @@ export const PosView: React.FC<PosViewProps> = ({
           }} 
         />
       )}
+
+      {/* Pending Orders Modal */}
+      <PendingOrdersModal
+        isOpen={isPendingOrdersOpen}
+        onClose={() => setIsPendingOrdersOpen(false)}
+        onProcessOrder={handleProcessPendingOrder}
+      />
     </div>
   );
 };
