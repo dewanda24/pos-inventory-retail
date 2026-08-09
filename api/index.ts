@@ -9,8 +9,11 @@ app.use('/api', apiRouter);
 
 export default async function handler(req: any, res: any) {
   try {
-    // Ensure DB connection is active before processing request
-    await dbStore.connect();
+    // Ensure DB connection is active before processing request, with a 5-second timeout
+    await Promise.race([
+      dbStore.connect(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('MongoDB Connection Timeout on Vercel (5s)')), 5000))
+    ]);
     return app(req, res);
   } catch (error: any) {
     console.error('Vercel API DB Connection Error:', error);
